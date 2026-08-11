@@ -1,0 +1,268 @@
+数组遍历
+for(auto row : arr) {
+    for(int x : row) {
+
+    }
+}
+会出错，row不是引用类型，初始化row时会将这些数组转换成指向该数组首元素指针
+
+int arr[]
+vector<int> f(begin(arr), end(arr))
+
+int k = {3.14} 错误，窄化转换
+
+int val = 0;
+switch(flag) {
+    case true:
+        string name;    错误，控制流绕过一个隐式初始化的变量
+        int i = 10;     错误，控制流绕过一个显式初始化的变量
+        {
+            val = 5;    正确
+        }
+        break;
+    case false:
+        val = 10;       正确
+        break;
+}
+
+int (*arr)[]    数组指针
+int* arr[]      指针数组
+
+bool cmp(int a, int b) {
+    return a > b;
+}
+
+decltype()      返回引用的情况
+1.()内是一个具名的左值变量 / 对象，不是单纯的变量名
+decltype(x=0)
+decltype(*p)
+decltype(arr[0])
+decltype()(obj.m)
+2.本身是引用类型
+3.被双层括号包裹
+decltype((x))
+
+typedef bool(Fun)(int, int)
+typedef decltype(cmp) Fun2      等价， Fun和Fun2属于函数类型
+
+typedef bool(Funp)(int, int)
+typedef decltype(cmp) *funp2     等价， Funp和Funp2属于指向函数的指针
+
+Funp f1(int)    正确，f1返回指向函数的指针
+Fun f1(int)     错误，f1不能返回一个函数
+Fun *f1(int)    正确 
+
+定义在类内的函数是隐式的inline函数，不一定会在调用处展开，只是建议，复杂的函数，编译器会拒绝展开
+声明在类内，定义在类外不是，比如在头文件声明，源文件定义
+类外定义想变成inline，必须手写关键字
+
+友元没有传递性，不能通过继承的方式传递
+友元函数可以在类内定义
+
+vec[0]      编译器不会检查是否越界，运行时报错
+vec.at(0)   抛出out_of_range异常
+
+fill(begin(), end(), 0);
+auto it = back_inserter(vec);
+*it = 42;
+fill_n(back_inserter(vec), 10, 0);      插入10个0
+copy(begin(), end(), begin());
+replace(begin(), end(), 0, 42);         0->42
+
+set<int, decltype(func)*> s(func);      第二个参数是函数指针类型
+map<string, int>::value_type            pair<const string, int>
+map<string, int>::key_type              string
+map<string, int>::mapped_type           int
+
+
+shared_ptr<int> sp(new int(42));
+shared_ptr<int> sp = new int(42);       错误
+
+未提供删除器是未定义的，shared_ptr默认使用delete
+shared_ptr<int[]> sp(new int[10], deleter); 
+shared_ptr不直接支持动态数组管理
+*(sp.get() + i)来获取内置指针
+
+allocator<T> a;
+auto const p = a.allocate(n);   分配一段原始、未构造的内存，保存n个类型为T的对象，返回一个指针p
+a.deallocate(p, n);             释放从T*指针p开始的内存，这块内存保存n个类型为T的对象
+a.construct(p, arg);            a.construct(p, 10， 'c');p必须是一个T*的指针，指向一块原始内存
+a.destory(p)；                  对p指向的对象执行析构函数
+
+右值引用不能绑定左值，左值引用不能绑定右值
+const int &r = i * 42;          可以将一个const的左值引用绑定到一个右值上
+右值引用只能绑定到临时对象
+
+前置和后置递增递减
+operator++()        前置
+operator++(int)     后置
+
+greater<>()         >比较，降序
+less<>()            <比较，增序
+
+类型转换运算符 必须是类的成员函数，不能声明返回类型，形参为空，通常是const
+m_val是smallInt的成员变量
+operator int() const { return m_val; }      int->smallInt
+si = 4;             先将4隐式转为smallInt，然后调用operator=
+
+bool类型的类型转换运算符可能导致意外结果
+int i = 42;
+cin << i;
+istream本身没有定义<<，本应该是错的，但是该代码能使用istream的bool类型转换，然后bool
+提升为int类型，用内置<<，导致结果是0或1左移i位
+
+explicit operator int() const {return val;} 编译器不会自动执行这种类型转换，需显示转换
+static_cast<int>(si) + 3;
+
+如果表达式被用作条件，编译器会将显示的类型转换成自动用于它
+while(std::cin >> value)
+
+继承
+静态成员遵循通用的访问控制规则，静态体系中只存在该成员的唯一定义，基类和派生类都可以访问
+
+base = derived;     把derived的基类部分拷贝给base
+
+从派生类向基类的类型转换只对指针或引用类型有效
+基类向派生类不存在隐式类型转换
+和其他成员一样，派生类向基类的类型转换也可能会由于访问受限而变得不可行
+
+不能创建抽象类(含有纯虚函数的类)的对象
+
+public继承派生类能访问基类的protected成员，但是派生类的友元不能访问
+
+private继承时
+派生类中
+protected:
+using Base::member;     保持对象相关的成员访问级别, 对构造函数无效
+
+派生类中使用和基类相同的成员名会隐藏基类中的成员，即使成员函数形参类型不同
+
+如果删除一个指向派生类对象的基类指针，则需要虚析构函数
+如果基类的析构函数不是虚函数，则delete一个指向派生类的基类指针将产生未定义行为
+
+成员函数后加&或&&，指定该函数只能被左值或右值调用
+void fun() &;
+Data d;
+d.fun();        正确
+Data().fun();   错误
+
+模板
+template<typename T>
+using twin = pair<T, T>;
+twin<string> authors;
+
+void operator()(int *p){};  仿函数
+obj(p);     对象可以像函数一样跑起来
+unique_ptr<int, DebugDelete> up(new int, DebugDelete());    可以当智能指针删除器
+
+template<typename T>
+template<typename It>
+    Blob<T>::Blob(It b, It e){};模板类模板构造函数的定义
+Blob<int> a(begin(ia), end(ia));  It->int*
+
+void fun(T&&);
+右值引用，可以接受一个右值，不能将右值引用绑定到一个左值上
+但是模板可以接受一个左值，T&&->int& &&,折叠成int&
+
+static_cast<string&&>(t);   从一个左值static_cast到一个右值是允许的
+
+可变参数模板
+void print() {}
+template<typename T, typename... Args>
+void print(const T &t, Args ... args) {
+    cout << t << endl;
+    print(args...)；
+}
+
+print(func(args)...)    如果还要调用函数的话
+print(func(args...))    错误
+
+sizeof...()运算符
+可以获取包中元素的个数
+sizeof...(Args)
+
+
+forward转发
+work(std::forward<Args>(args)...);
+
+特例化一个模板，本质是实例化一个模板，而非重载它
+template<>
+int compare(const char* const& p1, const char* const& p2) {
+}
+
+tuple使用运算符进行比较时，两个tuple对象必须有相同个数成员
+
+tuple_size<TupleType>::value; 返回tuple类型的成员数量
+
+equal_range(cbegin(), cend(), val， cmp)     cmp比较规则
+使用<来比较元素，返回一个迭代器pair,如果未找到值val，first=second
+
+bitset<n> b(u), b是unsigned long long值u低n位的拷贝
+bitset<n> b(s, pos, zero, one) s只能保存zero和one字符，从pos位置开始的n个字符
+
+boolalpha   noboolalpha     将true和false输入为字符串
+showbase    noshowbase      对整型值输出表示进制的前缀
+showpoint   noshowpoint     对浮点值总是显示小数点
+uppercase                   在十六进制值中打印0x，在科学计数法中打印E
+nouppercase                 在十六进制值中打印0x，在科学计数法中打印e
+setw()                      指定下一个数字或字符串值的最小空间
+left                        在值得右侧填充字符
+right
+internal                    在符号和值之间填充字符
+setfill                     允许指定一个字符代替默认的空格来补充输出
+fixed                       浮点值显示为定点十进制
+flush
+setbase(b)                  将整数输入位b进制
+
+
+cout << boolalpha << true << noboolalpha << endl;
+cout << oct << 20 << endl;  24
+cout << hex << 20 << endl;  14
+cout << dec << 20 << endl;  20
+
+cout << showbase;           当打印整型值时显示进制
+cout << oct << 20 << endl;  024
+cout << hex << 20 << endl;  0x14
+cout << dec << 20 << endl;  20
+cout << noshowbase;    
+
+cout << setprecision(3);    设置打印浮点数的精度舍入 3.14是3位精度 3.142是4位
+
+cout << left << setw(12) << d << right;     恢复右对齐
+cout << setfill('*') << setw(10) << d << setfill(' ');
+
+noskipws    会令输入运算符读取空白符(空格符， 制表符， 换行符， 回车符)
+ab  c
+d
+char c;
+while(cin >> c) {
+    cout << c;
+}
+输出    abcd
+
+cin >> noskipws；   设置cin读入空白符
+ab  c
+d
+char c;
+while(cin >> c) {
+    cout << c;
+}
+输出
+ab  c
+d
+cin >> skipws；
+
+未格式化的输入/输出， 输出与输入完全相同
+char c;
+while (cin.get(c)) {
+    cout.put(c);
+}
+
+is.get(c);
+is.putback(c);  放回
+is.unget();     向后移动一个字节
+is.peek();      将下一个字节作为int返回，但不从流中删除它
+
+while((c == cin.get()) != EOF)
+
+is.getline();
